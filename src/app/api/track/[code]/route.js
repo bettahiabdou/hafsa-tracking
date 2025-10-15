@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import * as cheerio from 'cheerio';
 
 export async function GET(request, { params }) {
   try {
@@ -11,6 +10,10 @@ export async function GET(request, { params }) {
         { status: 400 }
       );
     }
+
+    // Dynamic import of cheerio for better compatibility
+    const cheerio = await import('cheerio');
+    const $ = cheerio.load;
 
     // Fetch from Amana API
     const timestamp = new Date().getTime();
@@ -42,34 +45,34 @@ export async function GET(request, { params }) {
     }
 
     // Parse HTML with Cheerio
-    const $ = cheerio.load(data.Html);
+    const doc = $(data.Html);
 
     // Extract package information
     const packageInfo = {
       trackingCode: code,
-      product: $('.lblProductName').text().trim() || null,
-      weight: $('.lblWeight').text().trim() || null,
-      amount: $('.lblMttCrbt').text().trim() || null,
-      currentPosition: $('.lblCurrentPosition').text().trim() || null,
-      depositDate: $('.lblDepositDate').text().trim() || null,
-      destination: $('.lblRecipient').text().trim() || null,
-      origin: $('.tooltip_depart').first().text().trim() || null,
+      product: doc('.lblProductName').text().trim() || null,
+      weight: doc('.lblWeight').text().trim() || null,
+      amount: doc('.lblMttCrbt').text().trim() || null,
+      currentPosition: doc('.lblCurrentPosition').text().trim() || null,
+      depositDate: doc('.lblDepositDate').text().trim() || null,
+      destination: doc('.lblRecipient').text().trim() || null,
+      origin: doc('.tooltip_depart').first().text().trim() || null,
       deliveryDate: null,
       timeline: []
     };
 
     // Extract delivery date if exists
-    const deliveryDateText = $('.infotip_arrivee .b-subtitle').text().trim();
+    const deliveryDateText = doc('.infotip_arrivee .b-subtitle').text().trim();
     if (deliveryDateText && !deliveryDateText.includes('..')) {
       packageInfo.deliveryDate = deliveryDateText;
     }
 
     // Extract timeline events
-    $('.timeline li').each((index, element) => {
-      const date = $(element).find('.container_date').text().trim();
-      const time = $(element).find('.container_time').text().trim();
-      let description = $(element).find('div:last-child').text().trim();
-      const eventNumber = $(element).find('.bullet').text().trim();
+    doc('.timeline li').each((index, element) => {
+      const date = doc(element).find('.container_date').text().trim();
+      const time = doc(element).find('.container_time').text().trim();
+      let description = doc(element).find('div:last-child').text().trim();
+      const eventNumber = doc(element).find('.bullet').text().trim();
 
       // Clean description - remove duplicate time at beginning
       if (description.startsWith(time)) {
@@ -107,9 +110,13 @@ export async function GET(request, { params }) {
     return NextResponse.json(
       { 
         error: 'Erreur serveur',
-        details: error.message 
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       },
       { status: 500 }
     );
   }
 }
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
