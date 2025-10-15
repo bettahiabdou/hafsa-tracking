@@ -161,81 +161,87 @@ function AddPackageForm({ onAdd }) {
 }
 
 function PackageCard({ package: pkg }) {
-const getStatusBadge = () => {
-  const badges = {
-    delivered: { text: 'Livré', color: '#10b981' },
-    'in-transit': { text: 'En Transit', color: '#f59e0b' },
-    pending: { text: 'En Attente', color: '#6b7280' }
+  const getStatusBadge = () => {
+    const badges = {
+      delivered: { text: 'Livré', color: '#10b981' },
+      'in-transit': { text: 'En Transit', color: '#f59e0b' },
+      pending: { text: 'En Attente', color: '#6b7280' }
+    };
+    
+    const status = pkg.status || 'pending';
+    const badge = badges[status] || badges.pending;
+    
+    return (
+      <span style={{
+        background: badge.color,
+        color: 'white',
+        padding: '0.25rem 0.75rem',
+        borderRadius: '9999px',
+        fontSize: '0.875rem',
+        fontWeight: 'bold'
+      }}>
+        {badge.text}
+      </span>
+    );
   };
-  
-  // Get status from the package object
-  const status = pkg.status || 'pending';
-  const badge = badges[status] || badges.pending;
-  
-  return (
-    <span style={{
-      background: badge.color,
-      color: 'white',
-      padding: '0.25rem 0.75rem',
-      borderRadius: '9999px',
-      fontSize: '0.875rem',
-      fontWeight: 'bold'
-    }}>
-      {badge.text}
-    </span>
-  );
-};
 
   return (
-    <div className="card" style={{ 
-      borderLeft: '4px solid var(--gold)',
-      cursor: 'pointer',
-      transition: 'transform 0.2s'
-    }}
-    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(4px)'}
-    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
+    <a 
+      href={`/packages/${pkg.trackingCode}`}
+      style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
     >
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h3 className="text-gold font-bold text-xl mb-1">
-            {pkg.trackingCode}
-          </h3>
-          {pkg.clientName && (
-            <p className="text-slate-light">Client: {pkg.clientName}</p>
-          )}
+      <div 
+        className="card" 
+        style={{ 
+          borderLeft: '4px solid var(--gold)',
+          cursor: 'pointer',
+          transition: 'transform 0.2s'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(4px)'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h3 className="text-gold font-bold text-xl mb-1">
+              {pkg.trackingCode}
+            </h3>
+            {pkg.clientName && (
+              <p className="text-slate-light">Client: {pkg.clientName}</p>
+            )}
+          </div>
+          {getStatusBadge()}
         </div>
-        {getStatusBadge()}
-      </div>
 
-      <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-        <div>
-          <p className="text-slate-light" style={{ fontSize: '0.875rem' }}>Produit</p>
-          <p className="font-medium">{pkg.product || 'N/A'}</p>
+        <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+          <div>
+            <p className="text-slate-light" style={{ fontSize: '0.875rem' }}>Produit</p>
+            <p className="font-medium">{pkg.product || 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-slate-light" style={{ fontSize: '0.875rem' }}>Position</p>
+            <p className="font-medium">{pkg.currentPosition || 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-slate-light" style={{ fontSize: '0.875rem' }}>Poids</p>
+            <p className="font-medium">{pkg.weight || 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-slate-light" style={{ fontSize: '0.875rem' }}>Montant</p>
+            <p className="font-medium text-gold">{pkg.amount || 'N/A'}</p>
+          </div>
         </div>
-        <div>
-          <p className="text-slate-light" style={{ fontSize: '0.875rem' }}>Position</p>
-          <p className="font-medium">{pkg.currentPosition || 'N/A'}</p>
-        </div>
-        <div>
-          <p className="text-slate-light" style={{ fontSize: '0.875rem' }}>Poids</p>
-          <p className="font-medium">{pkg.weight || 'N/A'}</p>
-        </div>
-        <div>
-          <p className="text-slate-light" style={{ fontSize: '0.875rem' }}>Montant</p>
-          <p className="font-medium text-gold">{pkg.amount || 'N/A'}</p>
-        </div>
-      </div>
 
-      {pkg.timeline && pkg.timeline.length > 0 && (
-        <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(201, 169, 97, 0.2)' }}>
-          <p className="text-slate-light" style={{ fontSize: '0.875rem' }}>
-            Dernier événement: {pkg.timeline[0].date} {pkg.timeline[0].time}
-          </p>
-          <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
-            {pkg.timeline[0].description}
-          </p>
-        </div>
-      )}
-    </div>
+        {pkg.timeline && pkg.timeline.length > 0 && (
+          <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(201, 169, 97, 0.2)' }}>
+            <p className="text-slate-light" style={{ fontSize: '0.875rem' }}>
+              Dernier événement: {pkg.timeline[0].date} {pkg.timeline[0].time}
+            </p>
+            <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
+              {pkg.timeline[0].description}
+            </p>
+          </div>
+        )}
+      </div>
+    </a>
   );
 }
