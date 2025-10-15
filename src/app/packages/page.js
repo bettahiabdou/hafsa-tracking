@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function PackagesPage() {
   const [packages, setPackages] = useState([]);
@@ -186,7 +187,7 @@ function PackageCard({ package: pkg }) {
   };
 
   return (
-    <a 
+    <Link 
       href={`/packages/${pkg.trackingCode}`}
       style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
     >
@@ -242,6 +243,6 @@ function PackageCard({ package: pkg }) {
           </div>
         )}
       </div>
-    </a>
+    </Link>
   );
 }
