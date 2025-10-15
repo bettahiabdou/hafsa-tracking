@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function Dashboard() {
   return (
     <div className="container py-8">
@@ -38,9 +40,9 @@ export default function Dashboard() {
           Actions Rapides
         </h2>
         <div className="flex gap-4">
-          <a href="/packages/new" className="btn btn-primary">
+          <Link href="/packages" className="btn btn-primary">
             + Ajouter un Colis
-          </a>
+          </Link>
           <button className="btn btn-secondary">
             🔄 Actualiser Tous
           </button>

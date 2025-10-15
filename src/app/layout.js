@@ -1,4 +1,5 @@
 import './globals.css'
+import Link from 'next/link'
 
 export const metadata = {
   title: 'Hafsa Bijouterie - Suivi de Colis',
@@ -12,12 +13,18 @@ export default function RootLayout({ children }) {
         <nav>
           <div className="nav-container">
             <div className="nav-content">
-              <div className="text-2xl font-bold text-gold">
-                ✨ HAFSA BIJOUTERIE
-              </div>
+              <Link href="/" style={{ textDecoration: 'none' }}>
+                <div className="text-2xl font-bold text-gold" style={{ cursor: 'pointer' }}>
+                  ✨ HAFSA BIJOUTERIE
+                </div>
+              </Link>
               <div className="flex gap-6">
-                <a href="/">Dashboard</a>
-                <a href="/packages">Colis</a>
+                <Link href="/" style={{ color: 'var(--slate-light)', textDecoration: 'none' }}>
+                  Dashboard
+                </Link>
+                <Link href="/packages" style={{ color: 'var(--slate-light)', textDecoration: 'none' }}>
+                  Colis
+                </Link>
               </div>
             </div>
           </div>

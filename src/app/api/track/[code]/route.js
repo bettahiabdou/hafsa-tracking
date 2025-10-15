@@ -11,10 +11,6 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Dynamic import of cheerio for better compatibility
-    const cheerio = await import('cheerio');
-    const $ = cheerio.load;
-
     // Fetch from Amana API
     const timestamp = new Date().getTime();
     const url = `https://bam-tracking.barid.ma/Tracking/Search?trackingCode=${code}&_=${timestamp}`;
@@ -27,7 +23,7 @@ export async function GET(request, { params }) {
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: 'Erreur lors de la récupération des données' },
+        { error: 'Erreur lors de la récupération des données', status: response.status },
         { status: response.status }
       );
     }
@@ -44,50 +40,47 @@ export async function GET(request, { params }) {
       });
     }
 
-    // Parse HTML with Cheerio
-    const doc = $(data.Html);
+    // Use regex to parse HTML instead of cheerio
+    const html = data.Html;
+
+    // Helper function to extract text between HTML tags
+    const extractText = (html, className) => {
+      const regex = new RegExp(`class="${className}"[^>]*>([^<]*)<`, 'i');
+      const match = html.match(regex);
+      return match ? match[1].trim() : null;
+    };
 
     // Extract package information
     const packageInfo = {
       trackingCode: code,
-      product: doc('.lblProductName').text().trim() || null,
-      weight: doc('.lblWeight').text().trim() || null,
-      amount: doc('.lblMttCrbt').text().trim() || null,
-      currentPosition: doc('.lblCurrentPosition').text().trim() || null,
-      depositDate: doc('.lblDepositDate').text().trim() || null,
-      destination: doc('.lblRecipient').text().trim() || null,
-      origin: doc('.tooltip_depart').first().text().trim() || null,
+      product: extractText(html, 'lblProductName'),
+      weight: extractText(html, 'lblWeight'),
+      amount: extractText(html, 'lblMttCrbt'),
+      currentPosition: extractText(html, 'lblCurrentPosition'),
+      depositDate: extractText(html, 'lblDepositDate'),
+      destination: extractText(html, 'lblRecipient'),
+      origin: null,
       deliveryDate: null,
       timeline: []
     };
 
-    // Extract delivery date if exists
-    const deliveryDateText = doc('.infotip_arrivee .b-subtitle').text().trim();
-    if (deliveryDateText && !deliveryDateText.includes('..')) {
-      packageInfo.deliveryDate = deliveryDateText;
+    // Extract origin
+    const originMatch = html.match(/class="tooltip_depart"[^>]*>([^<]*)</i);
+    if (originMatch) {
+      packageInfo.origin = originMatch[1].trim();
     }
 
     // Extract timeline events
-    doc('.timeline li').each((index, element) => {
-      const date = doc(element).find('.container_date').text().trim();
-      const time = doc(element).find('.container_time').text().trim();
-      let description = doc(element).find('div:last-child').text().trim();
-      const eventNumber = doc(element).find('.bullet').text().trim();
-
-      // Clean description - remove duplicate time at beginning
-      if (description.startsWith(time)) {
-        description = description.substring(time.length).trim();
-      }
-
-      if (date && description) {
-        packageInfo.timeline.push({
-          number: eventNumber || (index + 1).toString(),
-          date,
-          time,
-          description
-        });
-      }
-    });
+    const timelineRegex = /<li>[\s\S]*?class="bullet">(\d+)<[\s\S]*?class="container_date">([^<]*)<[\s\S]*?class="container_time">([^<]*)<[\s\S]*?<div[^>]*>([^<]*(?:CENTRE|centre|agence)[^<]*)</gi;
+    let match;
+    while ((match = timelineRegex.exec(html)) !== null) {
+      packageInfo.timeline.push({
+        number: match[1].trim(),
+        date: match[2].trim(),
+        time: match[3].trim(),
+        description: match[4].trim()
+      });
+    }
 
     // Determine status
     let status = 'pending';
@@ -110,8 +103,7 @@ export async function GET(request, { params }) {
     return NextResponse.json(
       { 
         error: 'Erreur serveur',
-        details: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        details: error.message
       },
       { status: 500 }
     );
